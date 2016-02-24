@@ -1,0 +1,42 @@
+import csv     # imports the csv module
+import sys      # imports the sys module
+import urllib2,json
+import ast  
+api_google_key = 'please paste here your google key'
+api_google_url = 'https://maps.googleapis.com/maps/api/distancematrix/json?origins='
+source_list = []
+destination_list = []
+distance_list = []
+duration_list = []
+f = open(sys.argv[1], 'rb')
+g = open(sys.argv[2], 'wb')
+distance_dict = None
+duration_dict = None
+
+ # opens the csv file
+try:
+    reader = csv.reader(f)
+    my_list = list(reader) # creates the reader object
+    for i in my_list:
+        source = i[0]
+        destination = i[1]
+
+        source_list.append(source)
+        destination_list.append(destination)
+        source = urllib2.quote(source)
+        destination = urllib2.quote(destination)
+        request = api_google_url+source+'&destinations='+destination+'&key='+api_google_key
+        dist = json.load(urllib2.urlopen(request))
+        if 'duration'  in dist['rows'][0]['elements'][0].keys():
+            duration_dict = dist['rows'][0]['elements'][0]['duration']['text']
+        if 'distance'  in dist['rows'][0]['elements'][0].keys():
+            distance_dict = dist['rows'][0]['elements'][0]['distance']['text']
+        distance_list.append(distance_dict)
+        duration_list.append(duration_dict)
+    mywriter=csv.writer(g)
+    rows = zip(source_list,destination_list,distance_list,duration_list)
+    mywriter.writerows(rows)
+    g.close()
+         
+finally:
+    f.close() 
